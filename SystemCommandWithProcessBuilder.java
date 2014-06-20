@@ -3,6 +3,10 @@
   This is not to difficult, but when there are spaces, things can become difficult.
   But if you know how it works, then there is no problem.
 
+  It can be done Runtime.getRuntime().exec. In this example that would be good enough.
+  (See SystemCommand.java) But when you have a little bit more difficult things to do,
+  it is better to use ProcessBuilder. That I do in this example.
+
   The solution is: create a String array in which the first entry is the command
   and every parameter has his own entry (without quoutes).
 
@@ -18,16 +22,17 @@
           George Washington" citation.png
 
   To  test it:
-      javac SystemCommand.java && java SystemCommand && display citation.png
+      javac  SystemCommandWithProcessBuilder.java && \
+        java SystemCommandWithProcessBuilder      && \
+        display citation.png
 
   To use this you need of-course Java, but besides that ImageMagick needs to be installed.
   It is written for Linux.
  */
 
-import java.util.Scanner;
 import java.io.*;
 
-public class SystemCommand {
+public class SystemCommandWithProcessBuilder {
     // public #########################
     public static void main(String[] args) {
     	try {
@@ -66,17 +71,16 @@ public class SystemCommand {
     final static String FONT       = "Bookman-DemiItalic";
     final static String FONTSIZE   = "24";
 
-    static Runtime runtime = Runtime.getRuntime();
-
 
     private static void doCommand(final String[] cmd) throws IOException {
-        Process p;
-        Scanner sc;
+        BufferedReader      br;
+        String              line;
+        Process             p;
 
-        p  = runtime.exec(cmd);
-        sc = new Scanner(p.getInputStream());
-        while (sc.hasNext()) {
-            System.out.println(sc.nextLine());
+        p   = new ProcessBuilder(cmd).start();
+        br  = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        while ((line = br.readLine()) != null) {
+            System.out.println(line);
         }
     }
 }
