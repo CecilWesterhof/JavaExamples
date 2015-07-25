@@ -30,7 +30,9 @@ as default for message, so I can write my test cases in a DRY way.
 Of-course you need to validate this also in your code and you need to test your class. This is explained below.
 
 I added
-```@ReportAsSingleViolation
+```
+@ReportAsSingleViolation
+```
 
 because I want no more as one violation. In this case it is not necessary, but I prefer to use it always. Lessens the chance I forget it when it is needed.
 
