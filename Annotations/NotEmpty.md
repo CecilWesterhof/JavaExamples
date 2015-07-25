@@ -98,7 +98,9 @@ I use ownMessage to decide which class and message to use:
 ```
 
 I validate the created instance:
-```        constraintViolations = validator.validate(notEmptyClass);
+```
+        constraintViolations = validator.validate(notEmptyClass);
+```
 
 When there should be an error, check that there is exactly one and that it has the correct message:
 ```
