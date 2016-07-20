@@ -20,12 +20,29 @@ import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import javax.swing.filechooser.FileFilter;
 
 
 @SuppressWarnings("serial")
 public class CropImage extends Panel {
+    static class DispImage extends JPanel {
+        private int           dispHeight;
+        private BufferedImage dispImage;
+        private int           dispWidth;
+
+        DispImage(BufferedImage dispImage, int dispWidth, int dispHeight) {
+            this.dispImage  = dispImage;
+            this.dispWidth  = dispWidth;
+            this.dispHeight = dispHeight;
+        }
+
+        public void paintComponent(Graphics g) {
+            g.drawImage(dispImage, 0, 0, dispWidth, dispHeight, null);
+        }
+    }
+
     static private final int MAX_HEIGHT = 3456;
     static private final int MAX_WIDTH  = 5184;
 
@@ -125,29 +142,36 @@ public class CropImage extends Panel {
                     int ret = filesave.showDialog(panel, "Open file");
 
                     if (ret == JFileChooser.APPROVE_OPTION) {
-                        BufferedImage dest = new BufferedImage(cropWidth * 8,
-                                                               cropHeight * 8,
-                                                               BufferedImage.TYPE_3BYTE_BGR);
-                        Graphics g = dest.getGraphics();
-                        File output = filesave.getSelectedFile();
+                        BufferedImage dest;
+                        JFrame        dispFrame;
+                        int           dispHeight = cropHeight * 8;
+                        DispImage     dispImage;
+                        int           dispWidth  = cropWidth  * 8;
+                        Graphics      g;
+                        File          output     = filesave.getSelectedFile();
 
+                        dest       = new BufferedImage(dispWidth, dispHeight,
+                                                       BufferedImage.TYPE_3BYTE_BGR);
+                        g          = dest.getGraphics();
                         g.drawImage(image,
                                     0, 0,
-                                    cropWidth * 8, cropHeight * 8,
+                                    dispWidth, dispHeight,
                                     x * 8, y * 8,
-                                    (x + cropWidth) * 8, (y + cropHeight) * 8,
+                                    x * 8 + dispWidth, y * 8 + dispHeight,
                                     null);
                         g.dispose();
+                        dispFrame = new JFrame(output.getName());
+                        dispImage = new DispImage(dest, dispWidth, dispHeight);
+                        dispFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                        dispFrame.add(dispImage);
+                        dispFrame.setSize(dispWidth + 10, dispHeight + 40);
+                        dispFrame.setVisible(true);
+
                         try {
                             ImageIO.write(dest, "JPG", output);
                         } catch (IOException e) {
                             System.out.println("Could not write: " + output.getAbsolutePath());
                         }
-                        System.out.println(String.format("convert %s -crop 1080x1080+%d+%d %s; display %s",
-                                                         currentName,
-                                                         x * 8, y * 8,
-                                                         output.getAbsolutePath(),
-                                                         output.getAbsolutePath()));
                     }
                 }
             });
