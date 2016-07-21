@@ -2,11 +2,11 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Panel;
 import java.awt.Stroke;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.EventQueue;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -31,7 +31,7 @@ import javax.swing.filechooser.FileFilter;
 
 
 @SuppressWarnings("serial")
-public class CropImage extends Panel {
+public class CropImage extends JPanel {
     static class DispImage extends JPanel {
         private int           dispHeight;
         private BufferedImage dispImage;
@@ -48,8 +48,9 @@ public class CropImage extends Panel {
         }
     }
 
-    static private final int MAX_HEIGHT = 3456;
-    static private final int MAX_WIDTH  = 5184;
+    static private final int     MAX_HEIGHT = 3456;
+    static private final int     MAX_WIDTH  = 5184;
+    static private final boolean USE_PACK   = true;
 
     static private int            cropHeight  = 135;
     static private int            cropWidth   = 135;
@@ -118,7 +119,7 @@ public class CropImage extends Panel {
             });
     }
 
-    static private void initCrop(JButton crop, Panel panel) {
+    static private void initCrop(JButton crop, JPanel panel) {
         crop.setToolTipText("To save the cropped image");
         crop.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent event) {
@@ -151,7 +152,7 @@ public class CropImage extends Panel {
             });
     }
 
-    static private void initLoad(JButton load, Panel panel) {
+    static private void initLoad(JButton load, JPanel panel) {
         load.setToolTipText("To load a new image");
         load.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent event) {
@@ -195,6 +196,7 @@ public class CropImage extends Panel {
     public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
 
+        super.paintComponent(g);
         g2.setStroke(stroke);
         g.setColor(rectColor);
         g.drawImage(image, 0, 0, imageWidth, imageHeight, null);
@@ -222,12 +224,12 @@ public class CropImage extends Panel {
         }
     }
 
-    static public void main(String args[]) throws IOException {
+    private static void createAndShowGUI() {
         JButton  crop          = new JButton("Crop");
         JFrame   frame         = new JFrame("Crop image");
         JButton  load          = new JButton("Load");
         Calendar localCalendar = Calendar.getInstance(TimeZone.getDefault());
-        Panel    panel;
+        JPanel   panel         = null;
 
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
@@ -242,21 +244,38 @@ public class CropImage extends Panel {
                                                   System.getProperty("user.home"),
                                                   localCalendar.get(Calendar.YEAR),
                                                   localCalendar.get(Calendar.MONTH) + 1));
-        panel    = new CropImage();
+        try {
+            panel    = new CropImage();
+        } catch (IOException ioe) {
+            System.out.println("Could not create the panel");
+            ioe.printStackTrace();
+            System.exit(1);
+        }
         initCrop(crop, panel);
         initLoad(load, panel);
-        frame.setLayout(null);
-        crop.setBounds(      10, imageHeight + 10,  80, 30);
-        load.setBounds(     110, imageHeight + 10,  80, 30);
-        imageInfo.setBounds( 10, imageHeight + 50, 500, 30);
-        selectInfo.setBounds(10, imageHeight + 90, 500, 30);
-        frame.getContentPane().add(panel);
-        frame.getContentPane().add(crop);
-        frame.getContentPane().add(load);
-        frame.getContentPane().add(imageInfo);
-        frame.getContentPane().add(selectInfo);
-        frame.setSize(imageWidth + 10, imageHeight + 160);
+        if (!USE_PACK) {
+            frame.setLayout(null);
+            crop.setBounds(      10, imageHeight + 10,  80, 30);
+            load.setBounds(     110, imageHeight + 10,  80, 30);
+            imageInfo.setBounds( 10, imageHeight + 50, 500, 30);
+            selectInfo.setBounds(10, imageHeight + 90, 500, 30);
+            frame.setSize(imageWidth + 10, imageHeight + 160);
+        }
+        frame.add(panel);
+        frame.add(crop);
+        frame.add(load);
+        frame.add(imageInfo);
+        frame.add(selectInfo);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        if (USE_PACK) {
+            frame.pack();
+        }
         frame.setVisible(true);
+    }
+
+    static public void main(String args[]) {
+        EventQueue.invokeLater(() -> {
+                createAndShowGUI();
+        });
     }
 }
