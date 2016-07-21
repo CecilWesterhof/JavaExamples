@@ -17,10 +17,14 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import java.util.Calendar;
+import java.util.TimeZone;
+
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.UIManager;
 
 import javax.swing.filechooser.FileFilter;
 
@@ -49,14 +53,13 @@ public class CropImage extends Panel {
     static private int            cropHeight  = 135;
     static private int            cropWidth   = 135;
     static private String         currentName;
-    static private JFileChooser   fileopen    =
-        new JFileChooser(System.getProperty("user.home") + "/Pictures");
-    static private JFileChooser   filesave    =
-        new JFileChooser(System.getProperty("user.home") + "/Pictures");
+    static private JFileChooser   fileopen;
+    static private JFileChooser   filesave;
     static private BufferedImage  image;
     static private int            imageHeight = 432;
     static private int            imageWidth  = 648;
     static private Color          rectColor   = new Color(0, 0, 0);
+    static private int            resizeValue = 8;
     static private Stroke         stroke      = new BasicStroke(2.0f);
     static private int            x           = 0;
     static private int            y           = 0;
@@ -75,13 +78,13 @@ public class CropImage extends Panel {
         image  = ImageIO.read(input);
         photoWidth  = image.getWidth();
         photoHeight = image.getHeight();
-        if ((photoWidth > MAX_WIDTH) || (photoHeight > MAX_HEIGHT)) {
+        if (!verifyDimensions(photoWidth, photoHeight)) {
             System.out.println(String.format("Dimensions %s not correct",
                                              currentName));
             System.exit(1);
         }
-        imageWidth  = photoWidth  / 8;
-        imageHeight = photoHeight / 8;
+        imageWidth  = photoWidth  / resizeValue;
+        imageHeight = photoHeight / resizeValue;
         setSize(imageWidth, imageHeight);
         addMouseListener(new MouseListener() {
                 @Override
@@ -115,6 +118,14 @@ public class CropImage extends Panel {
         g.drawRect(x, y, cropWidth, cropHeight);
     }
 
+    static private boolean verifyDimensions(int width, int height) {
+        if ((width > MAX_WIDTH)               || (height > MAX_HEIGHT) ||
+            (width < cropWidth * resizeValue) || (height < cropHeight * resizeValue)) {
+            return false;
+        }
+        return true;
+    }
+
     static private void verifyXAndY() {
         if (x < 0 ) {
             x = 0;
@@ -129,11 +140,26 @@ public class CropImage extends Panel {
     }
 
     static public void main(String args[]) throws IOException {
-        JButton crop  = new JButton("Crop");
-        JFrame  frame = new JFrame("Crop image");
-        JButton load  = new JButton("Load");
-        Panel   panel = new CropImage();
+        JButton  crop          = new JButton("Crop");
+        JFrame   frame         = new JFrame("Crop image");
+        JButton  load          = new JButton("Load");
+        Calendar localCalendar = Calendar.getInstance(TimeZone.getDefault());
+        Panel    panel;
 
+        try {
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+        } catch (Exception e) {
+            System.out.println("Could not change the look and feel");
+        }
+        fileopen = new JFileChooser(String.format("%s/Pictures/%d-%02d/original/",
+                                                  System.getProperty("user.home"),
+                                                  localCalendar.get(Calendar.YEAR),
+                                                  localCalendar.get(Calendar.MONTH) + 1));
+        filesave = new JFileChooser(String.format("%s/Pictures/%d-%02d/",
+                                                  System.getProperty("user.home"),
+                                                  localCalendar.get(Calendar.YEAR),
+                                                  localCalendar.get(Calendar.MONTH) + 1));
+        panel    = new CropImage();
         frame.setLayout(null);
         crop.setToolTipText("To save the cropped image");
         crop.setBounds(10, imageHeight + 10, 80, 30);
@@ -144,22 +170,13 @@ public class CropImage extends Panel {
                     if (ret == JFileChooser.APPROVE_OPTION) {
                         BufferedImage dest;
                         JFrame        dispFrame;
-                        int           dispHeight = cropHeight * 8;
+                        int           dispHeight = cropHeight * resizeValue;
                         DispImage     dispImage;
-                        int           dispWidth  = cropWidth  * 8;
-                        Graphics      g;
+                        int           dispWidth  = cropWidth  * resizeValue;
                         File          output     = filesave.getSelectedFile();
 
-                        dest       = new BufferedImage(dispWidth, dispHeight,
-                                                       BufferedImage.TYPE_3BYTE_BGR);
-                        g          = dest.getGraphics();
-                        g.drawImage(image,
-                                    0, 0,
-                                    dispWidth, dispHeight,
-                                    x * 8, y * 8,
-                                    x * 8 + dispWidth, y * 8 + dispHeight,
-                                    null);
-                        g.dispose();
+                        dest       = image.getSubimage(x * resizeValue, y * resizeValue,
+                                                       dispWidth,       dispHeight);
                         dispFrame = new JFrame(output.getName());
                         dispImage = new DispImage(dest, dispWidth, dispHeight);
                         dispFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -196,12 +213,12 @@ public class CropImage extends Panel {
                             int photoWidth  = newImage.getWidth();
                             int photoHeight = newImage.getHeight();
 
-                            if ((photoWidth > MAX_WIDTH) || (photoHeight > MAX_HEIGHT)) {
+                            if (!verifyDimensions(photoWidth, photoHeight)) {
                                 System.out.println(String.format("Dimensions %s not correct",
-                                             newName));
+                                                                 newName));
                             } else {
-                                imageWidth  = photoWidth  / 8;
-                                imageHeight = photoHeight / 8;
+                                imageWidth  = photoWidth  / resizeValue;
+                                imageHeight = photoHeight / resizeValue;
                                 currentName = newName;
                                 image       = newImage;
                                 verifyXAndY();
