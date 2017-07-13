@@ -29,13 +29,16 @@ public class BoxedTest {
 
             System.out.printf("%s: ", getCurrentTime());
             tStart = System.nanoTime();
-            storage.function.run();
+            for (int ir = 0; ir < innerRepeats; ++ir) {
+                storage.function.run();
+            }
             tDuration = System.nanoTime() - tStart;
             System.out.printf("took %.2E seconds.\n", tDuration / 1_000_000_000.0);
         }
         System.out.println();
 	}
 
+    private static final int                innerRepeats  = 100_000_000;
     private static final int                repeats       = 5;
     private static final DateTimeFormatter  timeFormat    = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -132,8 +135,8 @@ public class BoxedTest {
         new Storage(boxedBoxed,          "Long Long   "),
     };
 
-    private static int end   = Integer.MAX_VALUE;
-    private static int start = Integer.MIN_VALUE;
+    private static int end   = 100;
+    private static int start = 0;
 
     // ################ inner class
     private static class Storage {
