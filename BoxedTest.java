@@ -1,5 +1,6 @@
 import java.time.format.DateTimeFormatter;
 import java.time.LocalTime;
+import java.util.function.Supplier;
 
 
 public class BoxedTest {
@@ -30,7 +31,7 @@ public class BoxedTest {
             System.out.printf("%s: ", getCurrentTime());
             tStart = System.nanoTime();
             for (int ir = 0; ir < innerRepeats; ++ir) {
-                storage.function.run();
+                storage.function.get();
             }
             tDuration = System.nanoTime() - tStart;
             System.out.printf("took %.2E seconds.\n", tDuration / 1_000_000_000.0);
@@ -38,91 +39,85 @@ public class BoxedTest {
         System.out.println();
 	}
 
+    private static final int                end           = 100;
     private static final int                innerRepeats  = 100_000_000;
     private static final int                repeats       = 5;
+    private static final int                start         = 0;
     private static final DateTimeFormatter  timeFormat    = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 
     // ################ functions to test
-    private static Thread boxedBoxed = new Thread(new Runnable() {
-            public void run() {
-                Long sum = 0L;
+    private static Supplier<Long> boxedBoxed = () -> {
+        Long sum = 0L;
 
-                for (Long i = Long.valueOf(start); i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (Long i = Long.valueOf(start); i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
-    private static Thread boxedBoxedInt = new Thread(new Runnable() {
-            public void run() {
-                Long sum = 0L;
+    private static Supplier<Long> boxedBoxedInt = () -> {
+        Long sum = 0L;
 
-                for (Integer i = start; i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (Integer i = start; i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
-    private static Thread boxedNotBoxed = new Thread(new Runnable() {
-            public void run() {
-                Long sum = 0L;
+    private static Supplier<Long> boxedNotBoxed = () -> {
+        Long sum = 0L;
 
-                for (long i = start; i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (long i = start; i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
-    private static Thread boxedNotBoxedInt = new Thread(new Runnable() {
-            public void run() {
-                Long sum = 0L;
+    private static Supplier<Long> boxedNotBoxedInt = () -> {
+        Long sum = 0L;
 
-                for (int i = start; i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (int i = start; i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
-    private static Thread notBoxedBoxed = new Thread(new Runnable() {
-            public void run() {
-                long sum = 0L;
+    private static Supplier<Long> notBoxedBoxed = () -> {
+        long sum = 0L;
 
-                for (Long i = Long.valueOf(start); i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (Long i = Long.valueOf(start); i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
-    private static Thread notBoxedBoxedInt = new Thread(new Runnable() {
-            public void run() {
-                long sum = 0L;
+    private static Supplier<Long> notBoxedBoxedInt = () -> {
+        long sum = 0L;
 
-                for (Integer i = start; i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (Integer i = start; i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
-    private static Thread notBoxedNotBoxed = new Thread(new Runnable() {
-            public void run() {
-                long sum = 0L;
+    private static Supplier<Long> notBoxedNotBoxed = () -> {
+        long sum = 0L;
 
-                for (long i = start; i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (long i = start; i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
-    private static Thread notBoxedNotBoxedInt = new Thread(new Runnable() {
-            public void run() {
-                long sum = 0L;
+    private static Supplier<Long> notBoxedNotBoxedInt = () -> {
+        long sum = 0L;
 
-                for (int i = start; i < end; ++i) {
-                    sum += i;
-                }
-            }
-        });
+        for (int i = start; i < end; ++i) {
+            sum += i;
+        }
+        return sum;
+    };
 
     private static final Storage storageList[] = new Storage[] {
         new Storage(notBoxedNotBoxedInt, "long int    "),
@@ -135,18 +130,15 @@ public class BoxedTest {
         new Storage(boxedBoxed,          "Long Long   "),
     };
 
-    private static int end   = 100;
-    private static int start = 0;
-
     // ################ inner class
     private static class Storage {
-        Storage(final Thread function, final String description) {
+        Storage(final Supplier<Long> function, final String description) {
             this.function    = function;
             this.description = description;
         }
 
-        public final Thread function;
-        public final String description;
+        public final Supplier<Long> function;
+        public final String         description;
     }
 
 }
